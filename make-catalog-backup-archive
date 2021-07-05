@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+
+CATALOG="${1?Specify catalog name}"
+
+umask 077
+
+/usr/lib/bareos/scripts/make_catalog_backup.pl "${CATALOG}"
+
+rm -f /var/lib/bareos/catalog.tar.gpg /var/lib/bareos/catalog.tar &> /dev/null
+
+tar --exclude='*.pem' --exclude='*.key' --exclude='*.crt' \
+	--exclude='.rndpwd' --ignore-failed-read \
+	-cf /var/lib/bareos/catalog.tar \
+	-C / \
+	etc/bareos/ \
+	var/lib/bareos/bareos.sql
+
+gpg --batch --encrypt --sign -r catalog.backup@s6.network \
+	/var/lib/bareos/catalog.tar
+rm /var/lib/bareos/catalog.tar
+
+/usr/lib/bareos/scripts/delete_catalog_backup
