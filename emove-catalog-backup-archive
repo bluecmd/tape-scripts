@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm -f /var/lib/bareos/catalog.tar.gpg /var/lib/bareos/catalog.tar &> /dev/null
