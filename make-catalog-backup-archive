@@ -2,6 +2,7 @@
 set -euo pipefail
 
 CATALOG="${1?Specify catalog name}"
+BUCKET="xxxx"
 
 umask 077
 
@@ -19,5 +20,10 @@ tar --exclude='*.pem' --exclude='*.key' --exclude='*.crt' \
 gpg --batch --encrypt --sign -r catalog.backup@s6.network \
 	/var/lib/bareos/catalog.tar
 rm /var/lib/bareos/catalog.tar
+
+# TODO: Would be nice to log (or email) if this fails
+gsutil -q cp /var/lib/bareos/catalog.tar.gpg \
+        "gs://${BUCKET}/${CATALOG}-$(date '+%Y-%m-%d_%H:%M').tar.gpg" || \
+        true
 
 /usr/lib/bareos/scripts/delete_catalog_backup
