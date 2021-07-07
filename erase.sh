@@ -1,38 +1,35 @@
 #!/bin/bash
 
 sn=()
-sn+=( P0046SL4 )
-sn+=( P0032SL4 )
-sn+=( P0042SL4 )
-sn+=( P0026SL4 )
-sn+=( P0048SL4 )
-sn+=( P0017SL4 )
-sn+=( P0024SL4 )
-sn+=( P0021SL4 )
-sn+=( P0019SL4 )
-sn+=( P0009SL4 )
-sn+=( P0010SL4 )
-sn+=( AAE714L4 )
-sn+=( AAE713L4 )
-sn+=( AAE712L4 )
-sn+=( P0035SL4 )
-sn+=( P0002SL4 )
-sn+=( P0004SL4 )
-sn+=( P0037SL4 )
-sn+=( P0018SL4 )
-sn+=( P0020SL4 )
-sn+=( P0039SL4 )
-sn+=( P0033SL4 )
-sn+=( P0040SL4 )
-sn+=( P0041SL4 )
+sn+=( P0016SL4 )
 
 set -euo pipefail
 
-CHR="/dev/sg2"
+CHR="/dev/sg3"
 DRV="/dev/nst1"
 
+slots=()
+IFS='
+'
+for line in $(mtx -f /dev/sg3 status)
+do
+  if [[ "${line}" == *" Storage Element"* ]] && \
+    [[ "${line}" == *"VolumeTag"* ]]; then
+    slot="$(echo "${line}" | awk '{split($3,a,":"); print a[1]}')"
+    tag="$(echo "${line}" | awk '{split($4,a,"="); print a[2]}')"
+    for s in ${sn[@]}
+    do
+      if [[ "${tag}" == "${s}" ]]; then
+        echo "Registered ${tag} in slot ${slot}"
+        slots+=( ${slot} )
+        break
+      fi
+    done
+  fi
+done
+
 pi=-1
-for i in 16 17 18 19 40 41 42 43 44
+for i in ${slots[@]}
 do
   if [[ "${pi}" != "-1" ]]; then
     echo "=> Unloading tape $pi"
